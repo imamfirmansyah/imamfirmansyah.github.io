@@ -229,7 +229,7 @@ async function fetchWordleWords(pattern, isContainsMode) {
         .map((word) => word.toUpperCase())
         .filter((word) => word.length === 5 && /^[A-Z]+$/.test(word));
     } else {
-      const baseUrl = "https://api.datamuse.com";
+      const baseUrl = "https://api.datamuse.com/words";
       const params = new URLSearchParams({ sp: pattern, max: "1000" });
       const response = await fetch(`${baseUrl}?${params.toString()}`);
       if (!response.ok) throw new Error(`API merespon dengan status: ${response.status}`);
