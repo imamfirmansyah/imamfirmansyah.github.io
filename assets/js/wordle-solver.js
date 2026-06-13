@@ -217,57 +217,86 @@ async function fetchWordleWords(pattern, isContainsMode) {
     resultCountEl.textContent = "Mencari...";
     let finalWords = [];
 
+    // ==========================================
+    // LALUAN 1: AMBIL DATA DARI SUMBER UTAMA (Lokal / API)
+    // ==========================================
     if (isContainsMode) {
-      // 1. Ambil dari file lokal berisi 2300+ kata lengkap agar tidak dilimit Datamuse
       const response = await fetch("./wordle-words.json");
       if (!response.ok) throw new Error("Gagal memuat file wordle-words.json");
 
       const localData = await response.json();
-
-      // Saring kata murni 5 huruf alfabet dari file lokal
-      let filteredLocal = localData
+      finalWords = localData
         .map((word) => word.toUpperCase())
         .filter((word) => word.length === 5 && /^[A-Z]+$/.test(word));
-
-      // Saring berdasarkan kandungan huruf yang diinput user
-      const requiredLetters = containsInput.value.toUpperCase().split("");
-      finalWords = filteredLocal.filter((word) => requiredLetters.every((letter) => word.includes(letter)));
-
-      // Urutkan secara alfabet (A-Z) untuk data lokal
-      finalWords.sort();
     } else {
-      // 2. Jika mode posisi, Datamuse sangat akurat, gunakan URLSearchParams
-      const baseUrl = "https://api.datamuse.com/words";
-      const params = new URLSearchParams({
-        sp: pattern,
-        max: "1000",
-      });
-
-      const apiUrl = `${baseUrl}?${params.toString()}`;
-      console.log("Menembak API ke alamat:", apiUrl);
-
-      const response = await fetch(apiUrl);
+      const baseUrl = "https://api.datamuse.com";
+      const params = new URLSearchParams({ sp: pattern, max: "1000" });
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       if (!response.ok) throw new Error(`API merespon dengan status: ${response.status}`);
 
       const apiData = await response.json();
       if (!Array.isArray(apiData)) throw new Error("Format data API bukan Array.");
 
-      // Saring data mentah dari API
       let filteredApi = apiData.filter((item) => item.word.length === 5 && /^[a-zA-Z]+$/.test(item.word));
-
-      // Urutkan berdasarkan popularitas tertinggi (Desending)
       filteredApi.sort((a, b) => b.score - a.score);
-
-      // Konversi ke array teks kapital
       finalWords = filteredApi.map((item) => item.word.toUpperCase());
     }
 
-    // Render hasil akhir yang sudah diproses secara adil
-    renderNewWords(finalWords);
+    // ==========================================
+    // LALUAN 2: BERSIHKAN & SATUKAN DENGAN DATABASE BACKUP INTERNAL
+    // ==========================================
+    // Gabungkan database utama dengan database internal kustom (Mencegah duplikasi dengan Set)
+    let allPossibleWords = [];
+    if (internalDatabase && internalDatabase.length > 0) {
+      // Satukan kedua array tanpa peduli kata tersebut ada di wordle-words atau tidak
+      const mergedSet = new Set([...internalDatabase, ...finalWords]);
+      allPossibleWords = Array.from(mergedSet);
+    } else {
+      allPossibleWords = [...finalWords];
+    }
+
+    // ==========================================
+    // LALUAN 3: PENYARINGAN AKHIR KATA YANG VALID (APLIKASIKAN RULES)
+    // ==========================================
+    let filteredResults = [];
+
+    if (isContainsMode) {
+      // Jika mode contains, semua kata (termasuk backup kustom) disaring berdasarkan kandungan huruf
+      const requiredLetters = containsInput.value.toUpperCase().split("");
+      filteredResults = allPossibleWords.filter((word) => requiredLetters.every((letter) => word.includes(letter)));
+    } else {
+      // Jika mode posisi, semua kata (termasuk backup kustom) disaring berdasarkan kotak posisi c1-c5
+      filteredResults = allPossibleWords.filter((word) => {
+        for (let i = 0; i < 5; i++) {
+          if (pattern[i] !== "?" && word[i] !== pattern[i].toUpperCase()) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    // ==========================================
+    // LALUAN 4: PRIORITAS UTAMA (VIP SORTING)
+    // ==========================================
+    // Mengurutkan hasil akhir agar kata dari database.json SELALU nangkring di paling atas
+    filteredResults.sort((a, b) => {
+      const aInInternal = internalDatabase.includes(a);
+      const bInInternal = internalDatabase.includes(b);
+
+      if (aInInternal && !bInInternal) return -1; // Kata internal naik ke atas
+      if (!aInInternal && bInInternal) return 1; // Kata internal naik ke atas
+
+      // Jika sesama kata internal atau sesama kata umum, urutkan berdasarkan abjad A-Z
+      return a.localeCompare(b);
+    });
+
+    // Kirim hasil akhir super lengkap ke UI
+    renderNewWords(filteredResults);
   } catch (error) {
     console.error("Gagal mengambil atau memproses data kata:", error);
     resultCountEl.textContent = "Error";
-    wordGridResultEl.innerHTML = `<div class="error-state" style="color: #ef4444; padding: 20px; text-align: center;">Gagal memuat kata. Pastikan berkas kamus lengkap atau jaringan aman.</div>`;
+    wordGridResultEl.innerHTML = `<div class="error-state" style="color: #ef4444; padding: 20px; text-align: center;">Gagal memuat kata.</div>`;
   }
 }
 
