@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wordle Solver - Imam Firmansyah</title>
+    <link rel="icon" href="data:," />
     <link rel="stylesheet" href="assets/css/wordle-solver.css" />
   </head>
   <body>
@@ -38,7 +39,7 @@
         </div>
 
         <div class="solver-form">
-          <input type="text" id="containsLetters" class="contains-input" autocomplete="off" />
+          <input type="text" id="containsLetters" maxlength="5" class="contains-input" autocomplete="off" />
 
           <button class="btn btn-primary btn-search">
             <svg
@@ -116,11 +117,21 @@
         <small class="input-helper">Kosongkan jika belum diketahui.</small>
       </section>
 
+      <section class="solver-card helper-card">
+        <div class="position-grid">
+          <input maxlength="1" id="helper-c1" />
+          <input maxlength="1" id="helper-c2" />
+          <input maxlength="1" id="helper-c3" />
+          <input maxlength="1" id="helper-c4" />
+          <input maxlength="1" id="helper-c5" />
+        </div>
+      </section>
+
       <!-- Actions -->
       <section class="action-row">
-        <button class="btn btn-primary">Helper</button>
+        <button class="btn btn-primary btn-helper">Helper</button>
 
-        <button class="btn btn-secondary">Virtual Keyboard</button>
+        <button class="btn btn-secondary btn-keyboard">Virtual Keyboard</button>
       </section>
 
       <!-- Virtual Keyboard -->
@@ -180,8 +191,6 @@
           </div>
 
           <div class="keyboard-row">
-            <button class="wide">DEL</button>
-
             <button>Z</button>
             <button>X</button>
             <button>C</button>
@@ -189,8 +198,6 @@
             <button>B</button>
             <button>N</button>
             <button>M</button>
-
-            <button class="wide">ENTER</button>
           </div>
         </div>
       </section>
@@ -224,16 +231,15 @@
             <span>Masukkan huruf di atas lalu klik "Cari Kata"</span>
           </div>
 
-          <!-- nanti generate JS -->
-          <div class="word-grid">
-            <!-- <span class="word-pill">CRATE</span>
+          <div class="word-grid-result">
+            <span class="word-pill">CRATE</span>
             <span class="word-pill">TRACE</span>
-            <span class="word-pill">STARE</span> -->
+            <span class="word-pill">STARE</span>
           </div>
         </div>
       </section>
     </div>
 
-    <script src="datamuse.js"></script>
+    <script src="assets/js/wordle-solver.js"></script>
   </body>
 </html>

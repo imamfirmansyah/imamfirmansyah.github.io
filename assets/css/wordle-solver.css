@@ -127,6 +127,14 @@ body {
   font-size: 18px;
   font-weight: 700;
 }
+.btn:focus, .btn:hover {
+  background-color: var(--green-dark);
+}
+
+.btn-helper .active,
+.btn-keyboard .active {
+  background-color: var(--green-dark);
+}
 
 .btn-primary {
   background: var(--green);
@@ -156,7 +164,7 @@ body {
   margin-top: 20px;
 }
 
-.word-grid {
+.word-grid-result {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 12px;
@@ -169,6 +177,11 @@ body {
   border-radius: 10px;
   font-weight: 700;
   letter-spacing: 1px;
+}
+.word-pill.highlight-helper {
+  border: 1px solid var(--yellow); /* Warna kuning emas (seperti `--yellow` Tailwind/Wordle) */
+  background-color: #f1edd1;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.3); /* Efek glow opsional */
 }
 
 .empty-state {
@@ -186,6 +199,15 @@ body {
 }
 .empty-state span {
   display: flex;
+}
+
+.keyboard-card,
+.helper-card {
+  display: none;
+}
+.keyboard-card .show,
+.helper-card .show {
+  display: block;
 }
 
 .keyboard {
@@ -210,10 +232,6 @@ body {
   font-weight: 700;
   font-size: 18px;
   cursor: pointer;
-}
-
-.keyboard .wide {
-  width: 100px;
 }
 
 .keyboard-legend {
