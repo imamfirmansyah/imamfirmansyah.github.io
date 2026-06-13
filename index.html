@@ -1,10 +1,239 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Blog Github - Imam Firmansyah</title>
-</head>
-<body>
-	<h1>Hello Github Blog</h1>
-	<p>I'm hosted with GitHub Pages.</p>
-</body>
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle Solver - Imam Firmansyah</title>
+    <link rel="stylesheet" href="assets/css/wordle-solver.css" />
+  </head>
+  <body>
+    <div class="solver-container">
+      <header class="solver-header">
+        <h1>Wordle Solver</h1>
+        <p>Temukan kemungkinan kata berdasarkan petunjuk yang sudah Anda miliki.</p>
+      </header>
+
+      <!-- Contains -->
+      <section class="solver-card">
+        <div class="card-title">
+          <span class="svg-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-info-icon lucide-info"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </span>
+          Masukkan Huruf
+        </div>
+
+        <div class="solver-form">
+          <input type="text" id="containsLetters" class="contains-input" autocomplete="off" />
+
+          <button class="btn btn-primary btn-search">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-search-icon lucide-search"
+            >
+              <path d="m21 21-4.34-4.34" />
+              <circle cx="11" cy="11" r="8" />
+            </svg>
+          </button>
+        </div>
+
+        <small class="input-helper">Kata harus mengandung semua huruf yang dimasukkan. </small>
+      </section>
+
+      <!-- Position -->
+      <section class="solver-card">
+        <div class="card-title">
+          <span class="svg-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-info-icon lucide-info"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </span>
+          Huruf pada Posisi yang Sudah Diketahui
+        </div>
+
+        <div class="solver-form">
+          <div class="position-grid">
+            <input maxlength="1" id="c1" />
+            <input maxlength="1" id="c2" />
+            <input maxlength="1" id="c3" />
+            <input maxlength="1" id="c4" />
+            <input maxlength="1" id="c5" />
+          </div>
+          <button class="btn btn-primary btn-search">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-search-icon lucide-search"
+            >
+              <path d="m21 21-4.34-4.34" />
+              <circle cx="11" cy="11" r="8" />
+            </svg>
+          </button>
+        </div>
+
+        <small class="input-helper">Kosongkan jika belum diketahui.</small>
+      </section>
+
+      <!-- Actions -->
+      <section class="action-row">
+        <button class="btn btn-primary">Helper</button>
+
+        <button class="btn btn-secondary">Virtual Keyboard</button>
+      </section>
+
+      <!-- Virtual Keyboard -->
+      <section class="solver-card keyboard-card">
+        <div class="card-title">
+          <span class="svg-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-keyboard-icon lucide-keyboard"
+            >
+              <path d="M10 8h.01" />
+              <path d="M12 12h.01" />
+              <path d="M14 8h.01" />
+              <path d="M16 12h.01" />
+              <path d="M18 8h.01" />
+              <path d="M6 8h.01" />
+              <path d="M7 16h10" />
+              <path d="M8 12h.01" />
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+            </svg>
+          </span>
+          Virtual Keyboard
+        </div>
+
+        <div class="keyboard">
+          <div class="keyboard-row">
+            <button>Q</button>
+            <button>W</button>
+            <button>E</button>
+            <button>R</button>
+            <button>T</button>
+            <button>Y</button>
+            <button>U</button>
+            <button>I</button>
+            <button>O</button>
+            <button>P</button>
+          </div>
+
+          <div class="keyboard-row">
+            <button>A</button>
+            <button>S</button>
+            <button>D</button>
+            <button>F</button>
+            <button>G</button>
+            <button>H</button>
+            <button>J</button>
+            <button>K</button>
+            <button>L</button>
+          </div>
+
+          <div class="keyboard-row">
+            <button class="wide">DEL</button>
+
+            <button>Z</button>
+            <button>X</button>
+            <button>C</button>
+            <button>V</button>
+            <button>B</button>
+            <button>N</button>
+            <button>M</button>
+
+            <button class="wide">ENTER</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="solver-card">
+        <div class="results-header">
+          <h3 class="m-0">Rekomendasi Kata</h3>
+          <span class="result-count">0 kata</span>
+        </div>
+
+        <div class="results-box">
+          <div class="empty-state">
+            <div class="svg-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="100%"
+                height="100%"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-search-icon lucide-search"
+              >
+                <path d="m21 21-4.34-4.34" />
+                <circle cx="11" cy="11" r="8" />
+              </svg>
+            </div>
+            <span>Masukkan huruf di atas lalu klik "Cari Kata"</span>
+          </div>
+
+          <!-- nanti generate JS -->
+          <div class="word-grid">
+            <!-- <span class="word-pill">CRATE</span>
+            <span class="word-pill">TRACE</span>
+            <span class="word-pill">STARE</span> -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="datamuse.js"></script>
+  </body>
 </html>
