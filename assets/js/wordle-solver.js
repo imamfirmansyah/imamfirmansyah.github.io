@@ -2,9 +2,10 @@
 // 1. DEKLARASI ELEMEN DOM GLOBAL
 // ==========================================
 // (Tetap biarkan di paling atas agar bisa diakses semua fungsi)
+const GITHUB_REPO_URL = "https://github.com/imamfirmansyah/imamfirmansyah.github.io";
 let containsInput, positionInputs, helperBtn, helperCard, helperInputs;
 let toggleKeyboardBtn, keyboardCard, keyboardButtons, wordGridResultEl, emptyStateEl, resultCountEl;
-
+let internalDatabase = [];
 let blockedLetters = [];
 
 // ==========================================
@@ -148,6 +149,8 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(applyHelperHighlight, 0);
     });
   });
+
+  loadInternalDatabase();
 });
 
 // ==========================================
@@ -208,57 +211,63 @@ function updateWordVisibility() {
   }
 }
 
+// MODIFIKASI ADAPTIF: Memisahkan pembacaan data antara Kamus Lokal & Datamuse API
 async function fetchWordleWords(pattern, isContainsMode) {
   try {
     resultCountEl.textContent = "Mencari...";
-
-    // PERBAIKAN MUTLAK: Menyusun URL menggunakan URLSearchParams agar tanda '?' dan '&' digabung otomatis dengan benar oleh browser
-    const baseUrl = "https://api.datamuse.com/words";
-    const params = new URLSearchParams({
-      sp: pattern, // Memasukkan pola seperti '???a?' atau '?????'
-      max: "1000", // Membatasi maksimal 1000 kata
-    });
-
-    const apiUrl = `${baseUrl}?${params.toString()}`;
-    console.log("Menembak API ke alamat:", apiUrl); // Untuk mempermudah Anda melakukan tracking lewat console log
-
-    const response = await fetch(apiUrl);
-
-    // Proteksi tambahan: Jika server mengembalikan status selain 200 (OK), hentikan proses agar tidak crash
-    if (!response.ok) {
-      throw new Error(`Server API Datamuse merespon dengan status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Pastikan data yang didapat benar-benar berbentuk Array sebelum di-manipulasi
-    if (!Array.isArray(data)) {
-      throw new Error("Format data yang diterima dari API bukan berbentuk Array.");
-    }
-
-    // Daripada hanya mengambil string teks di awal, kita simpan objek utuhnya dulu
-    let finalData = data.filter((item) => item.word.length === 5 && /^[a-zA-Z]+$/.test(item.word));
+    let finalWords = [];
 
     if (isContainsMode) {
-      const requiredLetters = containsInput.value.toLowerCase().split("");
-      finalData = finalData.filter((item) =>
-        requiredLetters.every((letter) => item.word.toLowerCase().includes(letter)),
-      );
+      // 1. Ambil dari file lokal berisi 2300+ kata lengkap agar tidak dilimit Datamuse
+      const response = await fetch("./wordle-words.json");
+      if (!response.ok) throw new Error("Gagal memuat file wordle-words.json");
+
+      const localData = await response.json();
+
+      // Saring kata murni 5 huruf alfabet dari file lokal
+      let filteredLocal = localData
+        .map((word) => word.toUpperCase())
+        .filter((word) => word.length === 5 && /^[A-Z]+$/.test(word));
+
+      // Saring berdasarkan kandungan huruf yang diinput user
+      const requiredLetters = containsInput.value.toUpperCase().split("");
+      finalWords = filteredLocal.filter((word) => requiredLetters.every((letter) => word.includes(letter)));
+
+      // Urutkan secara alfabet (A-Z) untuk data lokal
+      finalWords.sort();
+    } else {
+      // 2. Jika mode posisi, Datamuse sangat akurat, gunakan URLSearchParams
+      const baseUrl = "https://api.datamuse.com/words";
+      const params = new URLSearchParams({
+        sp: pattern,
+        max: "1000",
+      });
+
+      const apiUrl = `${baseUrl}?${params.toString()}`;
+      console.log("Menembak API ke alamat:", apiUrl);
+
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error(`API merespon dengan status: ${response.status}`);
+
+      const apiData = await response.json();
+      if (!Array.isArray(apiData)) throw new Error("Format data API bukan Array.");
+
+      // Saring data mentah dari API
+      let filteredApi = apiData.filter((item) => item.word.length === 5 && /^[a-zA-Z]+$/.test(item.word));
+
+      // Urutkan berdasarkan popularitas tertinggi (Desending)
+      filteredApi.sort((a, b) => b.score - a.score);
+
+      // Konversi ke array teks kapital
+      finalWords = filteredApi.map((item) => item.word.toUpperCase());
     }
 
-    // URUTKAN BERDASARKAN SKOR POPULARITAS TERTINGGI (Desending)
-    finalData.sort((a, b) => b.score - a.score);
-
-    // Baru konversi ke Array String Kapital untuk dilempar ke renderNewWords
-    let finalWords = finalData.map((item) => item.word.toUpperCase());
-
+    // Render hasil akhir yang sudah diproses secara adil
     renderNewWords(finalWords);
   } catch (error) {
-    console.error("Gagal mengambil data dari Datamuse:", error);
+    console.error("Gagal mengambil atau memproses data kata:", error);
     resultCountEl.textContent = "Error";
-
-    // Tampilkan pesan error ramah di dalam grid hasil jika API bermasalah
-    wordGridResultEl.innerHTML = `<div class="error-state" style="color: #ef4444; padding: 20px; text-align: center;">Gagal memuat kata. Pastikan format input benar atau coba lagi nanti.</div>`;
+    wordGridResultEl.innerHTML = `<div class="error-state" style="color: #ef4444; padding: 20px; text-align: center;">Gagal memuat kata. Pastikan berkas kamus lengkap atau jaringan aman.</div>`;
   }
 }
 
@@ -271,9 +280,11 @@ function renderNewWords(words) {
     btn.classList.remove("eliminated");
   });
 
-  helperInputs.forEach((input) => {
-    if (input) input.value = "";
-  });
+  if (helperInputs) {
+    helperInputs.forEach((input) => {
+      if (input) input.value = "";
+    });
+  }
 
   if (words.length === 0) {
     emptyStateEl.style.display = "flex";
@@ -286,6 +297,27 @@ function renderNewWords(words) {
       const span = document.createElement("span");
       span.className = "word-pill";
       span.textContent = word;
+
+      // 1. Periksa apakah kata sudah terdaftar di database internal JSON hasil tabungan
+      if (internalDatabase && internalDatabase.includes(word)) {
+        span.style.backgroundColor = "#bbf7d0"; // Visual warna hijau soft
+        span.title = "Sudah ada di database internal";
+      } else {
+        span.title = "Klik untuk simpan ke database GitHub";
+
+        // 2. Pasang event klik untuk memicu otomatisasi GitHub Issue
+        span.addEventListener("click", () => {
+          const confirmSave = confirm(`Apakah Anda ingin menyimpan kata "${word}" ke database GitHub?`);
+          if (confirmSave) {
+            const issueTitle = encodeURIComponent(`ADD_WORD:${word}`);
+            const issueBody = encodeURIComponent(`Menambahkan kata baru dari aplikasi Wordle Solver.`);
+            const githubIssueUrl = `${GITHUB_REPO_URL}/issues/new?title=${issueTitle}&body=${issueBody}`;
+
+            window.open(githubIssueUrl, "_blank");
+          }
+        });
+      }
+
       wordGridResultEl.appendChild(span);
     });
   }
@@ -293,13 +325,10 @@ function renderNewWords(words) {
 
 function applyHelperHighlight() {
   const wordPills = document.querySelectorAll(".word-grid-result .word-pill");
-
-  // Ambil nilai terbaru langsung dari elemen yang sudah terhubung dengan ID helper-c1 s/nd helper-c5
   const helperRules = helperInputs.map((input) => (input && input.value ? input.value.toUpperCase() : null));
   const hasActiveRule = helperRules.some((rule) => rule !== null);
 
   wordPills.forEach((pill) => {
-    // Jika semua kotak helper kosong, bersihkan semua border kuning
     if (!hasActiveRule) {
       pill.classList.remove("highlight-helper");
       return;
@@ -308,21 +337,33 @@ function applyHelperHighlight() {
     const wordText = pill.textContent.toUpperCase();
     let isMatch = true;
 
-    // Periksa kecocokan posisi huruf (0-4)
     for (let i = 0; i < 5; i++) {
       const requiredLetter = helperRules[i];
-      // Jika helper diisi dan huruf di posisi tersebut berbeda, nyatakan tidak cocok
       if (requiredLetter && wordText[i] !== requiredLetter) {
         isMatch = false;
         break;
       }
     }
 
-    // Pasang atau lepas class border kuning
     if (isMatch) {
       pill.classList.add("highlight-helper");
     } else {
       pill.classList.remove("highlight-helper");
     }
   });
+}
+
+// ==========================================
+// 6. MANAGEMENT REPOSITORI REPO KATA (database.json)
+// ==========================================
+async function loadInternalDatabase() {
+  try {
+    const response = await fetch("./database.json");
+    if (response.ok) {
+      internalDatabase = await response.json();
+      console.log("Database internal berhasil dimuat:", internalDatabase);
+    }
+  } catch (error) {
+    console.error("Gagal memuat database internal:", error);
+  }
 }

@@ -1,0 +1,64 @@
+name: Save Word to JSON Database
+
+on:
+    issues:
+        types: [opened]
+
+jobs:
+    update-database:
+        if: startsWith(github.event.issue.title, 'ADD_WORD:')
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            issues: write
+
+        steps:
+            - name: Checkout Repository Code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 18
+
+            - name: Process Word and Update JSON
+              run: |
+                  # 1. Ambil judul issue (misal: ADD_WORD:CRATE)
+                  TITLE="${{ github.event.issue.title }}"
+
+                  # 2. Ekstrak katanya saja setelah tanda titik dua (:)
+                  WORD=$(echo "$TITLE" | cut -d':' -f2 | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')
+                  echo "Kata yang diekstrak: $WORD"
+
+                  # 3. Jalankan skrip inline Node.js untuk manipulasi file JSON secara aman
+                  node -e "
+                    const fs = require('fs');
+                    const file = './database.json';
+                    let data = [];
+                    if (fs.existsSync(file)) {
+                      try { data = JSON.parse(fs.readFileSync(file, 'utf8')); } catch(e) {}
+                    }
+                    if (!Array.isArray(data)) data = [];
+                    if (!data.includes('$WORD')) {
+                      data.push('$WORD');
+                      data.sort(); // Jaga database internal tetap rapi urut abjad
+                      fs.writeFileSync(file, JSON.stringify(data, null, 2));
+                      console.log('Kata sukses ditambahkan!');
+                    } else {
+                      console.log('Kata sudah terdaftar.');
+                    }
+                  "
+
+            - name: Commit and Push Changes to GitHub
+              run: |
+                  git config --global user.name "github-actions[bot]"
+                  git config --global user.family "github-actions[bot]@://github.com"
+                  git add database.json
+                  git commit -m "chore: auto-add word $(echo '${{ github.event.issue.title }}' | cut -d':' -f2) to database" || echo "No changes to commit"
+                  git push
+
+            - name: Auto Close Resolved Issue
+              uses: peter-evans/close-issue@v3
+              with:
+                  issue-number: ${{ github.event.issue.number }}
+                  comment: "Kata berhasil diverifikasi dan dimasukkan ke dalam internal database repositori! Terima kasih."

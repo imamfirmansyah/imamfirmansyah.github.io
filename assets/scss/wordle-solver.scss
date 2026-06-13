@@ -186,6 +186,10 @@ body {
     background-color: #f1edd1;
     box-shadow: 0 0 8px rgba(234, 179, 8, 0.3); /* Efek glow opsional */
   }
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .empty-state {
